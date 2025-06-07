@@ -19,6 +19,5 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT p FROM Project p WHERE p.tasks IS EMPTY")
     Page<Project> findProjectsWithNoTasks(Pageable pageable);
 
-    // We can add more custom queries here later as needed, e.g., for pagination and sorting,
-    // or for specific business logic like finding projects by status or deadline.
+
 }

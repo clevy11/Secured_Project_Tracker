@@ -12,7 +12,6 @@ import java.util.List;
 @Repository
 public interface AuditLogRepository extends MongoRepository<AuditLog, String> {
 
-    // Example custom finder methods (can be added as needed)
     Page<AuditLog> findByEntityType(String entityType, Pageable pageable);
     Page<AuditLog> findByEntityTypeAndEntityId(String entityType, Long entityId, Pageable pageable);
     Page<AuditLog> findByUserId(String userId, Pageable pageable);

@@ -51,5 +51,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
            "FROM Task t GROUP BY t.status")
     List<TaskStatusCountDto> countTasksByStatusOverall();
 
-    // Later, we'll add queries for features like 'top developers'.
+
 }
