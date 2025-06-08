@@ -18,6 +18,7 @@ Project Tracker is a comprehensive Spring Boot application designed for **BuildM
     *   Find projects that currently have no tasks.
     *   Aggregate task counts by their status (overall and per project).
 *   **API Documentation**: Integrated Swagger UI for interactive API documentation and testing.
+*   **Email Notifications**: Automated email alerts for overdue tasks, with configurable SMTP settings. Notifications are sent daily at 8 AM and can also be triggered manually via API.
 
 ## Technologies Used
 
@@ -33,6 +34,7 @@ Project Tracker is a comprehensive Spring Boot application designed for **BuildM
 *   **Build Tool**: Apache Maven
 *   **API Documentation**: SpringDoc OpenAPI (Swagger UI)
 *   **Development Tools**: Spring Boot DevTools
+
 
 ## Prerequisites
 
@@ -75,6 +77,12 @@ Once started, the application will be accessible at `http://localhost:8080`.
 
 ## API Endpoints & Documentation
 
+### Notification Endpoints
+
+- `POST /api/tasks/notifications/send-overdue` - Manually trigger overdue task notifications
+- `GET /api/tasks/overdue` - Get a paginated list of overdue tasks
+- `GET /api/tasks/overdue/list` - Get a complete list of overdue tasks (non-paginated)
+
 All API endpoints are documented using Swagger/OpenAPI.
 
 *   **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
@@ -94,11 +102,13 @@ Below is the Entity Relationship Diagram for the relational database (PostgreSQL
 
 ## Future Enhancements / To-Do
 
-*   Implement an email notification service for overdue tasks.
 *   Introduce REST API versioning strategy.
 *   Enhance caching mechanisms (e.g., configure Caffeine with Time-To-Live settings).
 *   Develop comprehensive unit and integration tests for all services and controllers.
 *   Implement security features (e.g., Spring Security for authentication and authorization).
+*   Add email templates and support for HTML emails.
+*   Implement notification preferences for developers.
+*   Add email delivery status tracking and retry mechanisms.
 
 ## Contributing
 
@@ -106,4 +116,28 @@ Contributions are welcome! Please follow the standard fork-and-pull request work
 
 ## License
 
-(Specify your license here, e.g., MIT License. If none, you can state 'All Rights Reserved' or choose an open-source license.)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+```
+MIT License
+
+Copyright (c) 2025 Your Name
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
