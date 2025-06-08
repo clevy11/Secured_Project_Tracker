@@ -4,6 +4,9 @@ import com.example.clb.projecttracker.dto.TaskDto;
 import com.example.clb.projecttracker.dto.TaskRequestDto;
 import com.example.clb.projecttracker.dto.TaskStatusCountDto;
 import com.example.clb.projecttracker.service.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -66,7 +69,18 @@ public class TaskController {
         return ResponseEntity.ok(overdueTasks);
     }
 
+    @GetMapping("/overdue/list")
+    @Operation(summary = "Get all overdue tasks (not paginated)",
+               description = "Retrieves a list of all tasks that are past their due date and are not yet completed or cancelled.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of overdue tasks")
+    })
+    public ResponseEntity<List<TaskDto>> getOverdueTasksList() {
+        return ResponseEntity.ok(taskService.findOverdueTasks());
+    }
+
     @GetMapping("/projects/{projectId}/status-counts")
+    @Operation(summary = "Get task counts by status for a specific project")
     public ResponseEntity<List<TaskStatusCountDto>> getTaskCountsByStatusForProject(@PathVariable Long projectId) {
         List<TaskStatusCountDto> counts = taskService.getTaskCountsByStatusForProject(projectId);
         return ResponseEntity.ok(counts);

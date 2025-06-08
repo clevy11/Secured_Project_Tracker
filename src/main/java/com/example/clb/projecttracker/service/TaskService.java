@@ -3,12 +3,16 @@ package com.example.clb.projecttracker.service;
 import com.example.clb.projecttracker.dto.TaskDto;
 import com.example.clb.projecttracker.dto.TaskRequestDto;
 import com.example.clb.projecttracker.dto.TaskStatusCountDto;
+import com.example.clb.projecttracker.model.Task;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
-
+/**
+ * Service interface for managing tasks.
+ */
 public interface TaskService {
 
     TaskDto createTask(TaskRequestDto taskRequestDto);
@@ -35,7 +39,13 @@ public interface TaskService {
 
     void deleteTask(Long taskId);
 
-    // Methods for advanced queries will be added later, e.g.:
-    // List<TaskDto> findOverdueTasks();
-    // List<TaskDto> findTasksByStatus(TaskStatus status);
+    Page<TaskDto> findTasksByDeveloper(Long developerId, Pageable pageable);
+
+    List<TaskDto> findTasksByProjectId(Long projectId);
+
+    List<TaskDto> findOverdueTasks();
+
+    List<Task> findOverdueTasksForNotification();
+
+
 }

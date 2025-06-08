@@ -51,5 +51,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
            "FROM Task t GROUP BY t.status")
     List<TaskStatusCountDto> countTasksByStatusOverall();
 
+    List<Task> findByProjectId(Long projectId);
 
+    List<Task> findByDeveloperId(Long developerId);
+
+    // Method to find tasks that are overdue and not in a final state (COMPLETED or CANCELLED)
+    List<Task> findByDueDateBeforeAndStatusNotIn(LocalDate now, List<TaskStatus> excludedStatuses);
+
+    long countByStatus(TaskStatus status);
 }

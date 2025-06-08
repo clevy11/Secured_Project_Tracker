@@ -8,6 +8,7 @@ import com.example.clb.projecttracker.exception.ResourceNotFoundException;
 import com.example.clb.projecttracker.model.Developer;
 import com.example.clb.projecttracker.model.Project;
 import com.example.clb.projecttracker.model.Task;
+import com.example.clb.projecttracker.model.enums.TaskStatus;
 import com.example.clb.projecttracker.repository.DeveloperRepository;
 import com.example.clb.projecttracker.repository.ProjectRepository;
 import com.example.clb.projecttracker.repository.TaskRepository;
@@ -23,7 +24,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -89,6 +93,15 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     @Cacheable(value = "tasksByDeveloperPages", key = "#developerId")
     public Page<TaskDto> getTasksByDeveloperId(Long developerId, Pageable pageable) {
+        if (!developerRepository.existsById(developerId)) {
+            throw new ResourceNotFoundException("Developer", "id", developerId);
+        }
+        return taskRepository.findByDeveloperId(developerId, pageable).map(this::mapToDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TaskDto> findTasksByDeveloper(Long developerId, Pageable pageable) {
         if (!developerRepository.existsById(developerId)) {
             throw new ResourceNotFoundException("Developer", "id", developerId);
         }
@@ -221,6 +234,34 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
         auditLogService.logAction("Task", taskId, ActionType.DELETED, "SYSTEM", "Task deleted: " + task.getTitle());
         taskRepository.deleteById(taskId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskDto> findTasksByProjectId(Long projectId) {
+        List<Task> tasks = taskRepository.findByProjectId(projectId);
+        return tasks.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskDto> findOverdueTasks() {
+        List<Task> overdueTasks = taskRepository.findByDueDateBeforeAndStatusNotIn(
+                LocalDate.now(),
+                Arrays.asList(TaskStatus.COMPLETED, TaskStatus.CANCELLED)
+        );
+        return overdueTasks.stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> findOverdueTasksForNotification() {
+        return taskRepository.findByDueDateBeforeAndStatusNotIn(
+                LocalDate.now(),
+                Arrays.asList(TaskStatus.COMPLETED, TaskStatus.CANCELLED)
+        );
     }
 
     // --- Helper Mapper Methods ---
