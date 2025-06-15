@@ -52,14 +52,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Optional<String> redirectUri = CookieUtils.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME)
                 .map(Cookie::getValue);
 
+        String targetUrl = redirectUri.orElse(getDefaultTargetUrl());
+
+        // Validate the redirect URI
         if (redirectUri.isPresent() && !isAuthorizedRedirectUri(redirectUri.get())) {
             throw new BadRequestException("Sorry! We've got an Unauthorized Redirect URI and can't proceed with the authentication");
         }
 
-        String targetUrl = redirectUri.orElse(getDefaultTargetUrl());
-
+        // Generate JWT token
         String token = jwtUtils.generateJwtToken(authentication);
-
+        
+        // Add token to response header
+        response.setHeader("Authorization", "Bearer " + token);
+        
+        // For OAuth2 login, we'll redirect to the frontend with the token
+        // The frontend should be configured to handle the token from the URL
         return UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("token", token)
                 .build().toUriString();

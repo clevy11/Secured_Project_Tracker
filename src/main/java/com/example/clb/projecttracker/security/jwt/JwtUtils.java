@@ -1,51 +1,106 @@
 package com.example.clb.projecttracker.security.jwt;
 
-import com.example.clb.projecttracker.config.AppProperties;
 import com.example.clb.projecttracker.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    private static final String TOKEN_TYPE = "JWT";
+    private static final String TOKEN_ISSUER = "project-tracker-api";
+    private static final String TOKEN_AUDIENCE = "project-tracker-client";
+    private static final String ROLES_CLAIM = "roles";
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
-    @Autowired
-    private AppProperties appProperties;
+    @Value("${app.jwtSecret}")
+    private String jwtSecret;
+
+    @Value("${app.jwtExpirationMs:86400000}")
+    private int jwtExpirationMs;
+    
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
 
     public String generateJwtToken(Authentication authentication) {
-
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        
+        // Get user roles
+        List<String> roles = userPrincipal.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .collect(Collectors.toList());
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + appProperties.getAuth().getTokenExpirationMsec()))
-                .signWith(key(), SignatureAlgorithm.HS256)
+                .setSubject(userPrincipal.getUsername())
+                .setIssuer(TOKEN_ISSUER)
+                .setAudience(TOKEN_AUDIENCE)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .claim(ROLES_CLAIM, roles)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
-    private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(appProperties.getAuth().getTokenSecret()));
-    }
-
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key()).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+                
+        return claims.getSubject();
     }
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
+            Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(authToken);
+                
+            // Additional validation
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(authToken)
+                .getBody();
+                
+            // Validate token issuer
+            if (!claims.getIssuer().equals(TOKEN_ISSUER)) {
+                logger.warn("Invalid token issuer: {}", claims.getIssuer());
+                return false;
+            }
+            
+            // Validate token audience
+            if (!claims.getAudience().equals(TOKEN_AUDIENCE)) {
+                logger.warn("Invalid token audience: {}", claims.getAudience());
+                return false;
+            }
+            
             return true;
+            
+        } catch (SignatureException e) {
+            logger.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
@@ -54,8 +109,28 @@ public class JwtUtils {
             logger.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error validating JWT token: {}", e.getMessage());
         }
 
         return false;
+    }
+    
+    public String getJwtFromRequest(HttpServletRequest request) {
+        String header = request.getHeader(AUTH_HEADER);
+        
+        if (StringUtils.hasText(header) && header.startsWith(TOKEN_PREFIX)) {
+            return header.substring(TOKEN_PREFIX.length());
+        }
+        
+        logger.debug("No JWT token found in request headers");
+        return null;
+    }
+    
+    public String getJwtFromHeader(String header) {
+        if (StringUtils.hasText(header) && header.startsWith(TOKEN_PREFIX)) {
+            return header.substring(TOKEN_PREFIX.length());
+        }
+        return null;
     }
 }
