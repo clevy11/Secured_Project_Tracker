@@ -93,7 +93,6 @@ All API endpoints are documented using Swagger/OpenAPI.
 ![img_2.png](img_2.png)
 
 
-![img.png](img.png)
 
 ## Sequence diagram:
 ![img_3.png](img_3.png)
