@@ -86,9 +86,9 @@ public class WebSecurityConfig {
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             
-            // Set session management to stateless
+            // Set session management to IF_REQUIRED for OAuth2
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             
             // Set unauthorized requests exception handler
@@ -103,7 +103,7 @@ public class WebSecurityConfig {
                     .authorizationRequestRepository(cookieAuthorizationRequestRepository())
                 )
                 .redirectionEndpoint(redirection -> redirection
-                    .baseUri("/login/oauth2/code/*")
+                    .baseUri("/oauth2/callback/*")
                 )
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
@@ -130,7 +130,12 @@ public class WebSecurityConfig {
                     "/api/auth/**",
                     "/api/test/public",
                     "/api/test/oauth2/public",
-                    "/oauth2/**"
+                    "/oauth2/**",
+                    "/api/docs/**",
+                        "/auth/**"
+
+
+
                 ).permitAll()
                 
                 // OAuth2 login endpoints
@@ -172,7 +177,8 @@ public class WebSecurityConfig {
             "http://localhost:3000",  // React dev server
             "http://localhost:8080",  // Default port
             "http://localhost:8081",  // Alternative port
-            "https://editor.swagger.io"  // Swagger Editor
+            "https://editor.swagger.io",  // Swagger Editor
+            "http://localhost:8080/swagger-ui/oauth2-redirect.html"  // Swagger UI OAuth2 redirect
         ));
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
