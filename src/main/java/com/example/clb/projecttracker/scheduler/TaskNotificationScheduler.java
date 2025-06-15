@@ -28,7 +28,15 @@ public class TaskNotificationScheduler {
     @Transactional(readOnly = true)
     public void sendOverdueTaskNotifications() {
         log.info("Running scheduled job: Send Overdue Task Notifications");
-        List<Task> overdueTasks = taskService.findOverdueTasksForNotification();
+        List<Task> overdueTasks;
+
+        try {
+            overdueTasks = taskService.findOverdueTasksForNotification();
+            log.debug("Successfully retrieved overdue tasks from database");
+        } catch (Exception e) {
+            log.error("Failed to retrieve overdue tasks: {}", e.getMessage(), e);
+            return;
+        }
 
         if (overdueTasks.isEmpty()) {
             log.info("No overdue tasks found.");
@@ -36,6 +44,10 @@ public class TaskNotificationScheduler {
         }
 
         log.info("Found {} overdue tasks. Preparing notifications...", overdueTasks.size());
+
+        int successCount = 0;
+        int failureCount = 0;
+        int skippedCount = 0;
 
         for (Task task : overdueTasks) {
             Developer developer = task.getDeveloper(); // Assumes Developer is eagerly fetched or accessible
@@ -49,7 +61,7 @@ public class TaskNotificationScheduler {
                                 "Project: %s\n" + // Assumes Project is eagerly fetched or accessible
                                 "Due Date: %s\n\n" +
                                 "Please update its status or complete it as soon as possible.\n\n" +
-                                "Thank you,\nProject Tracker System",
+                                "Thank you,\nBest Regards",
                         developer.getName(),
                         task.getId(),
                         task.getTitle(),
@@ -62,13 +74,19 @@ public class TaskNotificationScheduler {
                     // If it's in com.example.clb.projecttracker.service, adjust the import above.
                     emailService.sendSimpleMessage(developer.getEmail(), subject, body);
                     log.info("Sent overdue task notification for task ID {} to {}", task.getId(), developer.getEmail());
+                    successCount++;
                 } catch (Exception e) {
                     log.error("Failed to send notification for task ID {} to {}: {}", task.getId(), developer.getEmail(), e.getMessage(), e);
+                    // Consider implementing a retry mechanism or queuing failed notifications for later retry
+                    // For now, we'll just continue processing other tasks
+                    failureCount++;
                 }
             } else {
                 log.warn("Skipping notification for task ID {}: No developer assigned or developer has no email.", task.getId());
+                skippedCount++;
             }
         }
-        log.info("Finished processing overdue task notifications. {} tasks processed.", overdueTasks.size());
+        log.info("Finished processing overdue task notifications. Total: {}, Success: {}, Failed: {}, Skipped: {}", 
+                 overdueTasks.size(), successCount, failureCount, skippedCount);
     }
 }

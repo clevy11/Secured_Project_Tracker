@@ -8,10 +8,10 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/project_tracker_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=728728
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/project_tracker_audit_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-project_tracker_db}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-728728}
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/${MONGO_INITDB_DATABASE:-project_tracker_audit_db}
       - SPRING_MAIL_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SPRING_MAIL_PORT=${SMTP_PORT:-587}
       - SPRING_MAIL_USERNAME=${SMTP_USERNAME:-your-email@gmail.com}
@@ -34,9 +34,9 @@ services:
     image: postgres:15-alpine
     container_name: postgres-db
     environment:
-      - POSTGRES_DB=project_tracker_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=728728
+      - POSTGRES_DB=${POSTGRES_DB:-project_tracker_db}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-728728}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -70,8 +70,8 @@ services:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
     environment:
-      - PGADMIN_DEFAULT_EMAIL=buntulevycaleb@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=728728
+      - PGADMIN_DEFAULT_EMAIL=${SMTP_USERNAME:-buntulevycaleb@gmail.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-728728}
     ports:
       - "5050:80"
     depends_on:
@@ -84,8 +84,8 @@ services:
     container_name: mongo-express
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongodb
-      - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+      - ME_CONFIG_BASICAUTH_USERNAME=${ME_CONFIG_BASICAUTH_USERNAME:-admin}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${ME_CONFIG_BASICAUTH_PASSWORD:-admin}
     ports:
       - "8081:8081"
     depends_on:
@@ -100,4 +100,3 @@ networks:
 volumes:
   postgres-data:
   mongodb-data:
-

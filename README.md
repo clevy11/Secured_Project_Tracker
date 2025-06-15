@@ -110,6 +110,16 @@ Below is the Entity Relationship Diagram for the relational database (PostgreSQL
 *   Implement notification preferences for developers.
 *   Add email delivery status tracking and retry mechanisms.
 
+## To create a Docker container for MongoDB and create a database:
+```bash
+docker run -d --name mongodb -p 27017:27017 -v mongodb-data:/data/db mongo:6.0
+```
+•  Connect again anytime with: docker exec -it mongodb mongosh
+•  Use specific database: use your_database_name
+•  Create collections: db.your_collection.insertOne({your: "data"})
+•  View collections: show collections
+•  Query data: db.your_collection.find()
+
 ## Contributing
 
 Contributions are welcome! Please follow the standard fork-and-pull request workflow. Ensure your code adheres to the project's coding standards and includes appropriate tests.
